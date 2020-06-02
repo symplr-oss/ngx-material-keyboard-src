@@ -26,7 +26,7 @@
     "lint:sass": "sass-lint --verbose --no-exit --config ./.sass-lint.yml",
     "postinstall": "npm rebuild node-sass",
     "preversion": "cd src/core && npm --no-git-tag-version version patch && git add package.json",
-    "version": "npm run build && git add -A dist/core",
+    "version": "npm run build",
     "push": "git push && git push --tags",
     "prerelease": "npm version patch && npm run push",
     "release": "cd dist/core && npm publish --access=public"
