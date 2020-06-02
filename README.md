@@ -3,20 +3,21 @@
 # ngx-material-keyboard
 Onscreen virtual keyboard for [Angular] using [Angular Material].
 
-![ngx-material-keyboard in action](https://cdn.rawgit.com/ngx-material-keyboard/core/develop/screenshots/ngxmk-2.gif)
+![ngx-material-keyboard in action](https://cdn.rawgit.com/symplr-oss/ngx-material-keyboard-src/master/screenshots/ngxmk-2.gif)
 
 ## Demo
-A demo can be found [here][demo].
+
+- `npm run build`
+- Open `dist/demo/index.html`
 
 ## Docs
-Generated documentation can be found [here][docs].
+
+- `npm run build`
+- Open `dist/docs/index.html`
 
 ## Getting started
-1. Install with your prefered packet manager (we're using `npm` here):
-`npm install --save @ngx-material-keyboard/core`
-> Be sure to fulfill the peer dependencies of this module, in particular [Angular] and [Angular Material].
 
-2. Add the module to your project, e.g. `app.module.ts`:
+### 1. Add the module to your project, e.g. `app.module.ts`:
 ```:typescript
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -42,7 +43,7 @@ import { MatKeyboardModule } from '@ngx-material-keyboard/core';
 export class AppModule {}
 ```
 
-3. Use the [`MatKeyboardDirective`][docs:MatKeyboardDirective] on your input elements or textareas and set the name or locale of the layout.
+### 2. Use the [`MatKeyboardDirective`] on your input elements or textareas and set the name or locale of the layout.
 > If not provided the locale will be derieved from the `LOCALE_ID` or the browser.
 ```:angular2html
 <input [matKeyboard]="'Azərbaycanca'">
@@ -87,25 +88,11 @@ const customLayouts: IKeyboardLayouts = {
 export class AppModule {}
 ```
 
-## Development
-This repository is managed by and layed out for [ng-packagr].
-
-### Versioning
-The application uses [semver][SemVer] and is developed with the [git flow branching model][Git-Flow].
-
 [Angular]: https://angular.io/
 [Angular Material]: https://material.angular.io/
 [the-darc/angular-virtual-keyboard]: https://github.com/the-darc/angular-virtual-keyboard
 [GreyWyvern VKI]: http://www.greywyvern.com/code/javascript/keyboard
 
-[SemVer]: http://semver.org/
-[Git-Flow]: http://nvie.com/posts/a-successful-git-branching-model/
-[ng-packagr]: https://github.com/dherges/ng-packagr
-
-[demo]: https://symplr-oss.github.io/ngx-material-keyboard-src/
-[docs]: https://symplr-oss.github.io/ngx-material-keyboard-src/
-
-[docs:MatKeyboardDirective]: https://ngx-material-keyboard.github.io/core/directives/MatKeyboardDirective.html
 [InjectionToken]: https://angular.io/guide/dependency-injection-in-action#injectiontoken
 [VKI Readme]: https://goo.gl/fCDExr
 [VKI Credits]: https://goo.gl/NYqTwc
