@@ -1,22 +1,22 @@
 {
-  "name": "ngx-material-keyboard-src",
-  "version": "0.1.1",
+  "name": "@symplr-oss/ngx-material-keyboard-src",
+  "version": "0.2.0",
   "description": "Onscreen virtual keyboard for Angular ≥ 5 (https://angular.io/) using Material 2 (https://material.angular.io/).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ngx-material-keyboard/core.git"
+    "url": "git+https://github.com/oss-symplr/ngx-material-keyboard-src.git"
   },
-  "author": "David Enke <post@davidenke.de>",
+  "author": "symplr",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ngx-material-keyboard/core/issues"
+    "url": "https://github.com/oss-symplr/ngx-material-keyboard-src/issues"
   },
-  "homepage": "https://github.com/ngx-material-keyboard/core",
+  "homepage": "https://github.com/oss-symplr/ngx-material-keyboard-src",
   "scripts": {
     "ng": "ng",
     "start": "npm run start:demo",
     "start:demo": "ng serve --host 0.0.0.0 --disable-host-check",
-    "build": "npm run build:core && npm run build:demo && npm run build:docs",
+    "build": "npm run build:core",
     "build:core": "ng-packagr -p ./src/core/package.json && cpx -p README.md dist/core",
     "build:demo": "ng build --prod --locale=de --progress=false --base-href=/demo/",
     "build:docs": "compodoc ./src/core -p ./tsconfig.json --silent --disableCoverage --disablePrivateOrInternalSupport --theme readthedocs --output ./dist/docs",
@@ -24,7 +24,12 @@
     "lint": "npm run lint:ts && npm run lint:sass",
     "lint:ts": "ng lint --type-check=true",
     "lint:sass": "sass-lint --verbose --no-exit --config ./.sass-lint.yml",
-    "postinstall": "npm rebuild node-sass"
+    "postinstall": "npm rebuild node-sass",
+    "preversion": "cd src/core && npm --no-git-tag-version version patch && git add package.json",
+    "version": "npm run build && git add -A dist/core",
+    "push": "git push && git push --tags",
+    "prerelease": "npm version patch && npm run push",
+    "release": "cd dist/core && npm publish --access=public"
   },
   "dependencies": {
     "@angular/animations": "5.2.5",
@@ -50,7 +55,7 @@
     "@angular/cli": "1.7.0",
     "@angular/compiler-cli": "5.2.5",
     "@angular/language-service": "5.2.5",
-    "@compodoc/compodoc": "1.1.5",
+    "@compodoc/compodoc": "^1.1.10",
     "@types/jasmine": "2.8.6",
     "@types/node": "9.4.6",
     "codelyzer": "4.1.0",

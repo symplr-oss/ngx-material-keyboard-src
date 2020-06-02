@@ -8,6 +8,7 @@ import { MAT_KEYBOARD_ICONS } from '../../configs/keyboard-icons.config';
 import { KeyboardClassKey } from '../../enums/keyboard-class-key.enum';
 import { IKeyboardDeadkeys } from '../../interfaces/keyboard-deadkeys.interface';
 import { IKeyboardIcons } from '../../interfaces/keyboard-icons.interface';
+import { KEYBOARD_LOCK_DURATION_MS } from '../../configs/keyboard-lock-config.js';
 
 export const VALUE_NEWLINE = '\n\r';
 export const VALUE_SPACE = ' ';
@@ -25,6 +26,8 @@ export class MatKeyboardKeyComponent implements OnInit {
   private _deadkeyKeys: string[] = [];
 
   private _iconKeys: string[] = [];
+
+  private static KeyboardLock: boolean = false;
 
   active$: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
@@ -143,7 +146,7 @@ export class MatKeyboardKeyComponent implements OnInit {
 
   // Inject dependencies
   constructor(@Inject(MAT_KEYBOARD_DEADKEYS) private _deadkeys: IKeyboardDeadkeys,
-              @Inject(MAT_KEYBOARD_ICONS) private _icons: IKeyboardIcons) {}
+    @Inject(MAT_KEYBOARD_ICONS) private _icons: IKeyboardIcons) { }
 
   ngOnInit() {
     // read the deadkeys
@@ -153,103 +156,113 @@ export class MatKeyboardKeyComponent implements OnInit {
     this._iconKeys = Object.keys(this._icons);
   }
 
-  onClick(event: MouseEvent) {
-    // Trigger a global key event
-    // TODO: investigate
-    this._triggerKeyEvent();
-
-    // Trigger generic click event
-    this.genericClick.emit(event);
-
-    // Manipulate the focused input / textarea value
-    const value = this.inputValue;
-    const caret = this.input ? this._getCursorPosition() : 0;
-
-    let char: string;
-    switch (this.key) {
-      // this keys have no actions yet
-      // TODO: add deadkeys and modifiers
-      case KeyboardClassKey.Alt:
-      case KeyboardClassKey.AltGr:
-      case KeyboardClassKey.AltLk:
-        this.altClick.emit(event);
-        break;
-
-      case KeyboardClassKey.Bksp:
-        this.deleteSelectedText();
-        this.bkspClick.emit(event);
-        break;
-
-      case KeyboardClassKey.Caps:
-        this.capsClick.emit(event);
-        break;
-
-      case KeyboardClassKey.Enter:
-        if (this._isTextarea()) {
-          char = VALUE_NEWLINE;
-        } else {
-          this.enterClick.emit(event);
-          // TODO: trigger submit / onSubmit / ngSubmit properly (for the time being this has to be handled by the user himself)
-          // console.log(this.control.ngControl.control.root)
-          // this.input.nativeElement.form.submit();
-        }
-        break;
-
-      case KeyboardClassKey.Shift:
-        this.shiftClick.emit(event);
-        break;
-
-      case KeyboardClassKey.Space:
-        char = VALUE_SPACE;
-        this.spaceClick.emit(event);
-        break;
-
-      case KeyboardClassKey.Tab:
-        char = VALUE_TAB;
-        this.tabClick.emit(event);
-        break;
-
-      default:
-        // the key is not mapped or a string
-        char = `${this.key}`;
-        this.keyClick.emit(event);
-        break;
-    }
-
-    if (char && this.input) {
-      this.replaceSelectedText(char);
-      this._setCursorPosition(caret + 1);
-    }
+  private static async lockKeyboard(ms: number) {
+    await new Promise(resolve => {
+      MatKeyboardKeyComponent.KeyboardLock = true;
+      setTimeout(resolve, ms);
+    }).then(() => {
+      MatKeyboardKeyComponent.KeyboardLock = false;
+    });
   }
 
-  private deleteSelectedText(): void {
-    const value = this.inputValue;
-    let caret = this.input ? this._getCursorPosition() : 0;
-    let selectionLength = this._getSelectionLength();
-    if (selectionLength === 0) {
-      if (caret === 0) {
-        return;
+  onClick(event: MouseEvent) {
+    if (!MatKeyboardKeyComponent.KeyboardLock) {
+      MatKeyboardKeyComponent.lockKeyboard(KEYBOARD_LOCK_DURATION_MS);
+      // Trigger a global key event
+      // TODO: investigate
+      this._triggerKeyEvent();
+
+      // Trigger generic click event
+      this.genericClick.emit(event);
+
+      // Manipulate the focused input / textarea value
+      let value = this.inputValue === null || this.inputValue === undefined ? '' : this.inputValue.toString();
+      const caretStart = this.input ? this._getCursorPosition().start : 0;
+      const caretEnd = this.input ? this._getCursorPosition().end : 0;
+
+      if (caretEnd !== caretStart) {
+        value = [value.slice(0, caretStart), value.slice(caretEnd)].join('');
+        this._setCursorPosition(caretStart);
       }
 
-      caret--;
-      selectionLength = 1;
+      let char: string;
+      switch (this.key) {
+        // this keys have no actions yet
+        // TODO: add deadkeys and modifiers
+        case KeyboardClassKey.Alt:
+        case KeyboardClassKey.AltGr:
+        case KeyboardClassKey.AltLk:
+          this.altClick.emit(event);
+          break;
+
+        case KeyboardClassKey.Bksp:
+          this.deleteSelectedText(caretStart, caretEnd, value);
+          if (this.input && this.input.nativeElement) {
+            this.input.nativeElement.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          this.bkspClick.emit(event);
+          break;
+
+        case KeyboardClassKey.Caps:
+          this.capsClick.emit(event);
+          break;
+
+        case KeyboardClassKey.Enter:
+          if (this._isTextarea()) {
+            char = VALUE_NEWLINE;
+          } else {
+            if (this.input && this.input.nativeElement) {
+              this.input.nativeElement.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            this.enterClick.emit(event);
+            // TODO: trigger submit / onSubmit / ngSubmit properly (for the time being this has to be handled by the user himself)
+            // console.log(this.control.ngControl.control.root)
+            // this.input.nativeElement.form.submit();
+          }
+          break;
+
+        case KeyboardClassKey.Shift:
+          this.shiftClick.emit(event);
+          break;
+
+        case KeyboardClassKey.Space:
+          char = VALUE_SPACE;
+          if (this.input && this.input.nativeElement) {
+            this.input.nativeElement.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          this.spaceClick.emit(event);
+          break;
+
+        case KeyboardClassKey.Tab:
+          char = VALUE_TAB;
+          this.tabClick.emit(event);
+          break;
+
+        default:
+          // the key is not mapped or a string
+          char = `${this.key}`;
+          this.keyClick.emit(event);
+          break;
+      }
+
+      if (char && this.input) {
+        this.inputValue = [value.slice(0, caretStart), char, value.slice(caretStart)].join('');
+        this._setCursorPosition(caretStart + 1);
+        if (this.input && this.input.nativeElement) {
+          this.input.nativeElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
     }
-
-    const headPart = value.slice(0, caret);
-    const endPart = value.slice(caret + selectionLength);
-
-    this.inputValue = [headPart, endPart].join('');
-    this._setCursorPosition(caret);
   }
 
-  private replaceSelectedText(char: string): void {
-    const value = this.inputValue;
-    const caret = this.input ? this._getCursorPosition() : 0;
-    const selectionLength = this._getSelectionLength();
-    const headPart = value.slice(0, caret);
-    const endPart = value.slice(caret + selectionLength);
-
-    this.inputValue = [headPart, char, endPart].join('');
+  private deleteSelectedText(caretStart: number, caretEnd: number, value: string): void {
+    if (caretEnd === caretStart && caretStart !== 0) {
+      this.inputValue = [value.slice(0, caretStart - 1), value.slice(caretStart)].join('');
+      this._setCursorPosition(caretStart - 1);
+    } else {
+      this.inputValue = value;
+      this._setCursorPosition(caretStart);
+    }
   }
 
   private _triggerKeyEvent(): Event {
@@ -273,44 +286,60 @@ export class MatKeyboardKeyComponent implements OnInit {
   }
 
   // inspired by:
-  // ref https://stackoverflow.com/a/2897510/1146207
-  private _getCursorPosition(): number {
+  // ref https://stackoverflow.com/a/4207763
+  private _getCursorPosition(): { start: number, end: number } {
     if (!this.input) {
       return;
     }
 
-    if ('selectionStart' in this.input.nativeElement) {
+    if ('selectionEnd' in this.input.nativeElement && 'selectionStart' in this.input.nativeElement) {
       // Standard-compliant browsers
-      return this.input.nativeElement.selectionStart;
-    } else if ('selection' in window.document) {
+      return {
+        start: this.input.nativeElement.selectionStart,
+        end: this.input.nativeElement.selectionEnd
+      };
+    } else if (window.document['selection']) {
       // IE
       this.input.nativeElement.focus();
-      const sel = window.document['selection'].createRange();
-      const selLen = window.document['selection'].createRange().text.length;
-      sel.moveStart('character', -this.control.value.length);
+      const el = this.input.nativeElement;
+      const range = window.document['selection'].createRange();
+      let start = 0;
+      let end = 0;
+      if (range && range.parentElement() === el) {
+        const len = el.value.length;
+        const normalizedValue = el.value.replace(/\r\n/g, '\n');
 
-      return sel.text.length - selLen;
+        // Create a working TextRange that lives only in the input
+        const textInputRange = el.createTextRange();
+        textInputRange.moveToBookmark(range.getBookmark());
+
+        // Check if the start and end of the selection are at the very end
+        // of the input, since moveStart/moveEnd doesn't return what we want
+        // in those cases
+        const endRange = el.createTextRange();
+        endRange.collapse(false);
+
+        if (textInputRange.compareEndPoints('StartToEnd', endRange) > -1) {
+          start = end = len;
+        } else {
+          start = -textInputRange.moveStart('character', -len);
+          start += normalizedValue.slice(0, start).split('\n').length - 1;
+
+          if (textInputRange.compareEndPoints('EndToEnd', endRange) > -1) {
+            end = len;
+          } else {
+            end = -textInputRange.moveEnd('character', -len);
+            end += normalizedValue.slice(0, end).split('\n').length - 1;
+          }
+        }
+      }
+
+      return {
+        start: start,
+        end: end
+      };
     }
   }
-
-  private _getSelectionLength(): number {
-    if (!this.input) {
-      return;
-    }
-
-    if ('selectionEnd' in this.input.nativeElement) {
-      // Standard-compliant browsers
-      return this.input.nativeElement.selectionEnd - this.input.nativeElement.selectionStart;
-    }
-
-    if ('selection' in window.document) {
-      // IE
-      this.input.nativeElement.focus();
-
-      return window.document['selection'].createRange().text.length;
-    }
-  }
-
   // inspired by:
   // ref https://stackoverflow.com/a/12518737/1146207
   // tslint:disable one-line
@@ -318,8 +347,9 @@ export class MatKeyboardKeyComponent implements OnInit {
     if (!this.input) {
       return;
     }
-
-    this.inputValue = this.control.value;
+    if (this.control) {
+      this.inputValue = this.control.value;
+    }
     // ^ this is used to not only get "focus", but
     // to make sure we don't have it everything -selected-
     // (it causes an issue in chrome, and having it doesn't hurt any other browser)
