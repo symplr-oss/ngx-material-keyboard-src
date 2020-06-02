@@ -102,8 +102,8 @@ The application uses [semver][SemVer] and is developed with the [git flow branch
 [Git-Flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [ng-packagr]: https://github.com/dherges/ng-packagr
 
-[demo]: https://ngx-material-keyboard.github.io/demo/
-[docs]: https://ngx-material-keyboard.github.io/core/
+[demo]: https://symplr-oss.github.io/ngx-material-keyboard-src/
+[docs]: https://symplr-oss.github.io/ngx-material-keyboard-src/
 
 [docs:MatKeyboardDirective]: https://ngx-material-keyboard.github.io/core/directives/MatKeyboardDirective.html
 [InjectionToken]: https://angular.io/guide/dependency-injection-in-action#injectiontoken

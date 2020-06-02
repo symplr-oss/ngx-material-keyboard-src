@@ -37,7 +37,7 @@ jobs:
         skip_cleanup: true
         local_dir: dist/docs
         github_token: $GITHUB_TOKEN
-        target_branch: gh-pages
+        target_branch: master
         on:
           repo: symplr-oss/ngx-material-keyboard-src
           branch: master
